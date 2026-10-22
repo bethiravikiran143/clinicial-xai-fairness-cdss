@@ -15,6 +15,7 @@ import streamlit as st
 
 from src.xai_engine import ClinicalXAI, FEATURE_LABELS
 from src.fairness_engine import ClinicalFairnessAuditor
+from src.train import train_and_evaluate
 
 # Streamlit Page Configuration
 st.set_page_config(
@@ -61,14 +62,32 @@ MODELS_DIR = os.path.join(BASE_DIR, "models")
 
 @st.cache_resource
 def load_all_artifacts():
-    bundle = joblib.load(os.path.join(MODELS_DIR, "test_data_bundle.pkl"))
-    xgb_model = joblib.load(os.path.join(MODELS_DIR, "xgb_model.pkl"))
-    rf_model = joblib.load(os.path.join(MODELS_DIR, "rf_model.pkl"))
-    lr_model = joblib.load(os.path.join(MODELS_DIR, "lr_model.pkl"))
-    scaler = joblib.load(os.path.join(MODELS_DIR, "scaler.pkl"))
-    
-    with open(os.path.join(MODELS_DIR, "metrics_summary.json"), "r") as f:
-        metrics_summary = json.load(f)
+    required_files = [
+        "test_data_bundle.pkl", "xgb_model.pkl", "rf_model.pkl",
+        "lr_model.pkl", "scaler.pkl", "metrics_summary.json"
+    ]
+    missing = any(not os.path.exists(os.path.join(MODELS_DIR, f)) for f in required_files)
+    if missing:
+        train_and_evaluate()
+
+    try:
+        bundle = joblib.load(os.path.join(MODELS_DIR, "test_data_bundle.pkl"))
+        xgb_model = joblib.load(os.path.join(MODELS_DIR, "xgb_model.pkl"))
+        rf_model = joblib.load(os.path.join(MODELS_DIR, "rf_model.pkl"))
+        lr_model = joblib.load(os.path.join(MODELS_DIR, "lr_model.pkl"))
+        scaler = joblib.load(os.path.join(MODELS_DIR, "scaler.pkl"))
+        with open(os.path.join(MODELS_DIR, "metrics_summary.json"), "r") as f:
+            metrics_summary = json.load(f)
+    except Exception:
+        # Re-train in current environment (e.g. if python version on Streamlit Cloud differs from local)
+        train_and_evaluate()
+        bundle = joblib.load(os.path.join(MODELS_DIR, "test_data_bundle.pkl"))
+        xgb_model = joblib.load(os.path.join(MODELS_DIR, "xgb_model.pkl"))
+        rf_model = joblib.load(os.path.join(MODELS_DIR, "rf_model.pkl"))
+        lr_model = joblib.load(os.path.join(MODELS_DIR, "lr_model.pkl"))
+        scaler = joblib.load(os.path.join(MODELS_DIR, "scaler.pkl"))
+        with open(os.path.join(MODELS_DIR, "metrics_summary.json"), "r") as f:
+            metrics_summary = json.load(f)
 
     # Initialize Explainers
     xai_xgb = ClinicalXAI(xgb_model, bundle["X_train"], bundle["feature_cols"])
