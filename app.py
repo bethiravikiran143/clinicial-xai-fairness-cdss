@@ -1,8 +1,6 @@
 """
 CardioGuard CDSS: Clinical Decision Support System with Model-Agnostic XAI and Fairness Auditing
-Project: Model-agnostic Interpretability for Black-box Classifiers via Fairness Auditing
-         with Disparate-impact/equalized-odds Metrics, Applied to CDSS for Diagnosis Explanation
-Roll No: 24ME5A5402 | Batch: 313 | Project ID: 66 | Guide: Mr. K. Rajendra
+Explainable AI for Cardiovascular Diagnostics & Algorithmic Equity Auditing
 """
 
 import os
@@ -80,7 +78,7 @@ def load_all_artifacts():
         with open(os.path.join(MODELS_DIR, "metrics_summary.json"), "r") as f:
             metrics_summary = json.load(f)
     except Exception:
-        # Re-train in current environment (e.g. if python version on Streamlit Cloud differs from local)
+        # Re-train in current environment if pickled files differ
         train_and_evaluate()
         bundle = joblib.load(os.path.join(MODELS_DIR, "test_data_bundle.pkl"))
         xgb_model = joblib.load(os.path.join(MODELS_DIR, "xgb_model.pkl"))
@@ -162,7 +160,7 @@ with st.sidebar:
             "patient_name": "Sarah Jenkins",
             "patient_id": "PT-41092",
             "num_checkups": 2,
-            "attending_doc": "Dr. K. Rajendra, MD",
+            "attending_doc": "Dr. Marcus Lee, MD",
             "chief_complaint": "Atypical epigastric tightness, exertional dyspnea & fatigue",
             "age": 58, "sex": 0, "cp": 1, "trestbps": 138, "chol": 242,
             "fbs": 0, "restecg": 0, "thalach": 145, "exang": 0, "oldpeak": 1.2,
@@ -180,10 +178,6 @@ with st.sidebar:
         }
     }
 
-    st.markdown("---")
-    st.caption("🎓 **Academic Project: 66** | Reg: `24ME5A5402`")
-    st.caption("👨‍🏫 **Supervisor:** Mr. K. Rajendra")
-
 # ==========================================
 # MAIN HEADER
 # ==========================================
@@ -200,12 +194,11 @@ kpi_cols[3].metric("Precision", f"{m_info.get('Precision', 0.0):.1%}")
 kpi_cols[4].metric("F1-Score", f"{m_info.get('F1 Score', 0.0):.3f}")
 kpi_cols[5].metric("ROC-AUC", f"{m_info.get('ROC-AUC', 0.0):.3f}")
 
-# TABS
-tab_diag, tab_global, tab_fairness, tab_academic = st.tabs([
+# TABS (Exactly the 3 operational clinical tabs)
+tab_diag, tab_global, tab_fairness = st.tabs([
     "🔍 Patient Diagnosis & Explanation (Local XAI)",
     "🌐 Global Black-Box Interpretability",
-    "⚖️ Algorithmic Fairness Audit",
-    "📚 Methodology & Project Documentation"
+    "⚖️ Algorithmic Fairness Audit"
 ])
 
 # ==========================================
@@ -217,7 +210,7 @@ with tab_diag:
         "patient_name": "Jane Doe",
         "patient_id": "PT-10254",
         "num_checkups": 1,
-        "attending_doc": "Dr. K. Rajendra, MD",
+        "attending_doc": "Dr. Sarah Adams, MD",
         "chief_complaint": "Routine cardiovascular consultation and evaluation",
         "age": 55, "sex": 1, "cp": 2, "trestbps": 130, "chol": 240,
         "fbs": 0, "restecg": 0, "thalach": 150, "exang": 0, "oldpeak": 0.8,
@@ -236,7 +229,7 @@ with tab_diag:
             value=int(pv.get("num_checkups", 1)),
             help="Cumulative number of clinical check-ups for this patient."
         )
-        in_doctor = st.text_input("Attending Physician", value=pv.get("attending_doc", "Dr. K. Rajendra, MD"))
+        in_doctor = st.text_input("Attending Physician", value=pv.get("attending_doc", "Dr. Sarah Adams, MD"))
     with p_col3:
         in_complaint = st.text_area(
             "Chief Complaint & Clinical Notes",
@@ -601,45 +594,3 @@ with tab_fairness:
     st.markdown("##### **3. Clinical & Ethical Audit Findings**")
     for note in audit["clinical_interpretation"]:
         st.warning(note)
-
-# ==========================================
-# TAB 4: METHODOLOGY & DOCUMENTATION
-# ==========================================
-with tab_academic:
-    st.markdown("""
-    ### 📋 Academic Project Specifications & Technical Reference
-
-    - **Project ID:** 66
-    - **Student Registration / Roll No:** `24ME5A5402`
-    - **Batch / Room / Section:** `313`
-    - **Domain:** Explainable AI for Data-Driven Decisions
-    - **Project Title:** *Model-agnostic Interpretability for Black-box Classifiers via Fairness Auditing with Disparate-impact/equalized-odds Metrics, Applied to Clinical Decision Support Systems for Diagnosis Explanation*
-    - **Project Supervisor / Guide:** Mr. K. Rajendra
-
-    ---
-
-    ### 📐 Mathematical Formulation of Core Metrics
-
-    #### 1. Disparate Impact (Statistical Parity Ratio)
-    $$\\text{Disparate Impact} = \\frac{P(\\hat{Y} = 1 \\mid A = 0)}{P(\\hat{Y} = 1 \\mid A = 1)}$$
-    - **Benchmark (EEOC 80% Rule):** The ratio must fall within $[0.80, 1.25]$ to demonstrate that positive diagnostic interventions are not disproportionately withheld from the unprivileged group.
-
-    #### 2. Equalized Odds Metric
-    $$P(\\hat{Y} = 1 \\mid A = 0, Y = y) = P(\\hat{Y} = 1 \\mid A = 1, Y = y) \\quad \\text{for } y \\in \\{0, 1\\}$$
-    - Evaluates whether True Positive Rate (Sensitivity) and False Positive Rate (1 - Specificity) are strictly equal across protected cohorts:
-    $$\\text{Equalized Odds Difference} = \\max(|\\text{FPR}_0 - \\text{FPR}_1|, |\\text{TPR}_0 - \\text{TPR}_1|)$$
-
-    #### 3. Model-Agnostic Interpretability (SHAP & LIME)
-    - **SHAP (Shapley Additive exPlanations):** Computes Shapley values from cooperative game theory:
-    $$\\phi_i(x) = \\sum_{S \\subseteq F \\setminus \\{i\\}} \\frac{|S|!(|F| - |S| - 1)!}{|F|!} \\left[ f(S \\cup \\{i\\}) - f(S) \\right]$$
-    - **LIME (Local Interpretable Model-agnostic Explanations):** Trains an interpretable surrogate model $g \\in G$ locally around patient instance $x$:
-    $$\\xi(x) = \\arg\\min_{g \\in G} \\mathcal{L}(f, g, \\pi_x) + \\Omega(g)$$
-
-    ---
-
-    ### 🏥 Clinical Relevance in Decision Support Systems
-    In healthcare, black-box predictions alone are unacceptable due to:
-    1. **Liability and Trust:** Physicians must know *why* a patient is flagged (e.g. ST depression, age, cholesterol).
-    2. **Algorithmic Disparity:** Cardiovascular models frequently under-diagnose women due to atypical symptom presentation in training datasets.
-    3. **Actionability:** Auditing via Disparate Impact and Equalized Odds allows healthcare systems to adjust thresholds and ensure equitable diagnostic access.
-    """)
