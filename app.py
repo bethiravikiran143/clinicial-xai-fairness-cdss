@@ -2,6 +2,7 @@
 CardioGuard CDSS: Clinical Decision Support System with Model-Agnostic XAI and Fairness Auditing
 Project: Model-agnostic Interpretability for Black-box Classifiers via Fairness Auditing
          with Disparate-impact/equalized-odds Metrics, Applied to CDSS for Diagnosis Explanation
+Roll No: 24ME5A5402 | Batch: 313 | Project ID: 66 | Guide: Mr. K. Rajendra
 """
 
 import os
@@ -46,13 +47,13 @@ st.markdown("""
         border-left: 5px solid #2563eb;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
-    .status-pass {
-        color: #16a34a;
-        font-weight: bold;
-    }
-    .status-fail {
-        color: #dc2626;
-        font-weight: bold;
+    .patient-emr-card {
+        background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+        color: white;
+        padding: 18px 24px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 10px rgba(30, 58, 138, 0.2);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -140,24 +141,39 @@ with st.sidebar:
         "Load Clinical Profile",
         [
             "Custom Patient Entry",
-            "Preset 1: High-Risk Elderly Male (Ischemia)",
-            "Preset 2: Borderline Female Patient (Atypical Angina)",
-            "Preset 3: Healthy Young Adult"
+            "Preset 1: Robert Chen (High-Risk Male, 4th Check-up)",
+            "Preset 2: Sarah Jenkins (Borderline Female, 2nd Check-up)",
+            "Preset 3: Alex Rivera (Healthy Adult, 1st Check-up)"
         ]
     )
 
     preset_values = {
-        "Preset 1: High-Risk Elderly Male (Ischemia)": {
+        "Preset 1: Robert Chen (High-Risk Male, 4th Check-up)": {
+            "patient_name": "Robert Chen",
+            "patient_id": "PT-89104",
+            "num_checkups": 4,
+            "attending_doc": "Dr. Sarah Adams, MD",
+            "chief_complaint": "Recurrent exertional retrosternal pressure, chronic hypertension",
             "age": 67, "sex": 1, "cp": 3, "trestbps": 162, "chol": 286,
             "fbs": 1, "restecg": 1, "thalach": 118, "exang": 1, "oldpeak": 2.8,
             "slope": 1, "ca": 2, "thal": 3
         },
-        "Preset 2: Borderline Female Patient (Atypical Angina)": {
+        "Preset 2: Sarah Jenkins (Borderline Female, 2nd Check-up)": {
+            "patient_name": "Sarah Jenkins",
+            "patient_id": "PT-41092",
+            "num_checkups": 2,
+            "attending_doc": "Dr. K. Rajendra, MD",
+            "chief_complaint": "Atypical epigastric tightness, exertional dyspnea & fatigue",
             "age": 58, "sex": 0, "cp": 1, "trestbps": 138, "chol": 242,
             "fbs": 0, "restecg": 0, "thalach": 145, "exang": 0, "oldpeak": 1.2,
             "slope": 0, "ca": 0, "thal": 2
         },
-        "Preset 3: Healthy Young Adult": {
+        "Preset 3: Alex Rivera (Healthy Adult, 1st Check-up)": {
+            "patient_name": "Alex Rivera",
+            "patient_id": "PT-11409",
+            "num_checkups": 1,
+            "attending_doc": "Dr. Michael Vance, MD",
+            "chief_complaint": "Annual baseline executive health screening; asymptomatic",
             "age": 36, "sex": 1, "cp": 0, "trestbps": 118, "chol": 178,
             "fbs": 0, "restecg": 0, "thalach": 174, "exang": 0, "oldpeak": 0.0,
             "slope": 0, "ca": 0, "thal": 1
@@ -185,54 +201,82 @@ kpi_cols[4].metric("F1-Score", f"{m_info.get('F1 Score', 0.0):.3f}")
 kpi_cols[5].metric("ROC-AUC", f"{m_info.get('ROC-AUC', 0.0):.3f}")
 
 # TABS
-tab_diag, tab_global, tab_fairness = st.tabs([
+tab_diag, tab_global, tab_fairness, tab_academic = st.tabs([
     "🔍 Patient Diagnosis & Explanation (Local XAI)",
     "🌐 Global Black-Box Interpretability",
     "⚖️ Algorithmic Fairness Audit",
+    "📚 Methodology & Project Documentation"
 ])
 
 # ==========================================
 # TAB 1: LOCAL PATIENT DIAGNOSIS & EXPLANATION
 # ==========================================
 with tab_diag:
-    st.markdown("#### **1. Patient Clinical Metrics Input**")
-    
     # Defaults from preset
     pv = preset_values.get(preset_choice, {
+        "patient_name": "Jane Doe",
+        "patient_id": "PT-10254",
+        "num_checkups": 1,
+        "attending_doc": "Dr. K. Rajendra, MD",
+        "chief_complaint": "Routine cardiovascular consultation and evaluation",
         "age": 55, "sex": 1, "cp": 2, "trestbps": 130, "chol": 240,
         "fbs": 0, "restecg": 0, "thalach": 150, "exang": 0, "oldpeak": 0.8,
         "slope": 1, "ca": 0, "thal": 2
     })
 
+    st.markdown("#### **1. Patient Demographics & Electronic Medical Record (EMR)**")
+    p_col1, p_col2, p_col3 = st.columns([1.2, 1, 1.8])
+    with p_col1:
+        in_name = st.text_input("Patient Full Name", value=pv.get("patient_name", "Jane Doe"))
+        in_mrn = st.text_input("Medical Record Number (MRN / Patient ID)", value=pv.get("patient_id", "PT-10254"))
+    with p_col2:
+        in_checkups = st.number_input(
+            "Check-up / Visit Number", 
+            min_value=1, max_value=50, 
+            value=int(pv.get("num_checkups", 1)),
+            help="Cumulative number of clinical check-ups for this patient."
+        )
+        in_doctor = st.text_input("Attending Physician", value=pv.get("attending_doc", "Dr. K. Rajendra, MD"))
+    with p_col3:
+        in_complaint = st.text_area(
+            "Chief Complaint & Clinical Notes",
+            value=pv.get("chief_complaint", "Routine cardiology follow-up"),
+            height=100
+        )
+
+    st.markdown("---")
+    st.markdown("#### **2. Patient Physiological & Diagnostic Vitals**")
+    
+    # Human-readable mappings for clean UI display
+    sex_map = {0: "Female", 1: "Male"}
+    cp_map = {0: "Typical Angina (0)", 1: "Atypical Angina (1)", 2: "Non-anginal Pain (2)", 3: "Asymptomatic (3)"}
+    fbs_map = {0: "Normal (<= 120 mg/dl)", 1: "Elevated (> 120 mg/dl)"}
+    restecg_map = {0: "Normal (0)", 1: "ST-T Wave Abnormality (1)", 2: "Left Ventricular Hypertrophy (2)"}
+    exang_map = {0: "No (0)", 1: "Yes (1)"}
+    slope_map = {0: "Upsloping (0)", 1: "Flat (1)", 2: "Downsloping (2)"}
+    thal_map = {1: "Normal (1)", 2: "Fixed Defect (2)", 3: "Reversible Defect (3)"}
+
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         in_age = st.number_input("Age (Years)", 20, 95, int(pv["age"]))
-        in_sex = st.selectbox("Biological Sex", [("Female (0)", 0), ("Male (1)", 1)], index=int(pv["sex"]))[1]
-        in_cp = st.selectbox(
-            "Chest Pain Type",
-            [("Typical Angina (0)", 0), ("Atypical Angina (1)", 1), ("Non-anginal Pain (2)", 2), ("Asymptomatic (3)", 3)],
-            index=int(pv["cp"])
-        )[1]
+        in_sex = st.selectbox("Biological Sex", options=[0, 1], format_func=lambda x: sex_map[x], index=int(pv["sex"]))
+        in_cp = st.selectbox("Chest Pain Type", options=[0, 1, 2, 3], format_func=lambda x: cp_map[x], index=int(pv["cp"]))
         in_trestbps = st.number_input("Resting Blood Pressure (mmHg)", 80, 220, int(pv["trestbps"]))
 
     with c2:
         in_chol = st.number_input("Serum Cholesterol (mg/dl)", 100, 600, int(pv["chol"]))
-        in_fbs = st.selectbox("Fasting Blood Sugar > 120 mg/dl", [("False (<=120)", 0), ("True (>120)", 1)], index=int(pv["fbs"]))[1]
-        in_restecg = st.selectbox(
-            "Resting ECG Results",
-            [("Normal (0)", 0), ("ST-T Abnormality (1)", 1), ("Left Ventricular Hypertrophy (2)", 2)],
-            index=int(pv["restecg"])
-        )[1]
+        in_fbs = st.selectbox("Fasting Blood Sugar", options=[0, 1], format_func=lambda x: fbs_map[x], index=int(pv["fbs"]))
+        in_restecg = st.selectbox("Resting ECG Results", options=[0, 1, 2], format_func=lambda x: restecg_map[x], index=int(pv["restecg"]))
         in_thalach = st.number_input("Max Heart Rate Achieved (bpm)", 60, 220, int(pv["thalach"]))
 
     with c3:
-        in_exang = st.selectbox("Exercise-Induced Angina", [("No (0)", 0), ("Yes (1)", 1)], index=int(pv["exang"]))[1]
+        in_exang = st.selectbox("Exercise-Induced Angina", options=[0, 1], format_func=lambda x: exang_map[x], index=int(pv["exang"]))
         in_oldpeak = st.number_input("ST Depression (mm)", 0.0, 7.0, float(pv["oldpeak"]), step=0.1)
-        in_slope = st.selectbox("Slope of Peak ST", [("Upsloping (0)", 0), ("Flat (1)", 1), ("Downsloping (2)", 2)], index=int(pv["slope"]))[1]
+        in_slope = st.selectbox("Slope of Peak ST", options=[0, 1, 2], format_func=lambda x: slope_map[x], index=int(pv["slope"]))
 
     with c4:
-        in_ca = st.selectbox("Major Vessels Colored by Fluoroscopy", [0, 1, 2, 3], index=int(pv["ca"]))
-        in_thal = st.selectbox("Thalassemia Type", [("Normal (1)", 1), ("Fixed Defect (2)", 2), ("Reversible Defect (3)", 3)], index=int(pv["thal"])-1)[1]
+        in_ca = st.selectbox("Major Vessels Colored (Fluoroscopy)", options=[0, 1, 2, 3], index=int(pv["ca"]))
+        in_thal = st.selectbox("Thalassemia Type", options=[1, 2, 3], format_func=lambda x: thal_map[x], index=int(pv["thal"])-1)
         st.markdown("<br>", unsafe_allow_html=True)
         btn_diagnose = st.button("🩺 Run CDSS Diagnostic Inference", use_container_width=True, type="primary")
 
@@ -254,9 +298,30 @@ with tab_diag:
     is_positive = prob_disease >= decision_threshold
 
     st.markdown("---")
-    st.markdown("#### **2. Clinical Diagnostic Assessment**")
-    r1, r2 = st.columns([1, 2])
+    st.markdown("#### **3. Clinical Diagnostic Assessment & Patient Chart**")
+    
+    # Patient EMR Chart Summary Card
+    st.markdown(f"""
+    <div class="patient-emr-card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap;">
+            <div>
+                <span style="background-color: rgba(255,255,255,0.25); padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.8px;">CLINICAL EMR RECORD</span>
+                <h3 style="margin: 8px 0 4px 0; color: white; font-size: 1.6rem;">👤 {in_name}</h3>
+                <span style="opacity: 0.95; font-size: 0.95rem;">
+                    <b>MRN:</b> <code>{in_mrn}</code> &nbsp;|&nbsp; 
+                    <b>Age / Sex:</b> {in_age} yrs / {sex_map[in_sex]} &nbsp;|&nbsp; 
+                    <b>Consultation:</b> Check-up #{in_checkups}
+                </span>
+            </div>
+            <div style="text-align: right; font-size: 0.92rem; max-width: 480px;">
+                <div style="margin-bottom: 4px;">👨‍⚕️ <b>Attending:</b> {in_doctor}</div>
+                <div style="opacity: 0.9; font-style: italic;"><b>Notes:</b> {in_complaint}</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
+    r1, r2 = st.columns([1, 2])
     with r1:
         # Gauge chart for risk score
         gauge_fig = go.Figure(go.Indicator(
@@ -285,25 +350,26 @@ with tab_diag:
     with r2:
         if is_positive:
             st.error(f"""
-            ### ⚠️ HIGH RISK DETECTED ({prob_disease:.1%})
-            **Clinical Recommendation:** Patient exceeds decision threshold ({decision_threshold:.0%}).
-            Immediate referral to invasive cardiology recommended for coronary angiography and stress echocardiography.
+            ### ⚠️ HIGH RISK DETECTED ({prob_disease:.1%}) for {in_name}
+            **Diagnostic Recommendation:** Calculated risk exceeds decision threshold ({decision_threshold:.0%}).
+            Immediate referral to invasive cardiology recommended for coronary angiography, stress echocardiography, and intensive pharmacotherapy.
             """)
         else:
             st.success(f"""
-            ### ✅ LOW RISK / HEALTHY ({prob_disease:.1%})
-            **Clinical Recommendation:** Patient falls below decision threshold ({decision_threshold:.0%}).
-            Routine outpatient follow-up and lifestyle management recommended.
+            ### ✅ LOW RISK / HEALTHY ({prob_disease:.1%}) for {in_name}
+            **Diagnostic Recommendation:** Calculated risk falls below decision threshold ({decision_threshold:.0%}).
+            Continue routine outpatient cardiovascular follow-up, dietary lifestyle modifications, and monitor at next scheduled check-up (#{in_checkups + 1}).
             """)
         
         st.info(f"""
-        **Demographic Profile:** { 'Male' if in_sex == 1 else 'Female' }, Age {in_age} ({'Senior' if in_age >= 55 else 'Adult'}).
+        **Patient Context:** {in_name} (MRN: `{in_mrn}`), Check-up #{in_checkups}.
+        **Demographic Profile:** {sex_map[in_sex]}, Age {in_age} ({'Senior' if in_age >= 55 else 'Adult'}).
         **Decision Rule:** P(Disease) $\\ge$ {decision_threshold:.2f} $\\implies$ High Risk.
         """)
 
     # Explainability Section
     st.markdown("---")
-    st.markdown("#### **3. Model-Agnostic Explainability (SHAP & LIME)**")
+    st.markdown("#### **4. Model-Agnostic Explainability (SHAP & LIME)**")
     
     if active_xai is None:
         st.warning("Model-agnostic SHAP & LIME explanations are designed for the non-linear Black-box models (XGBoost & Random Forest). Please select XGBoost or Random Forest from the sidebar.")
@@ -315,15 +381,12 @@ with tab_diag:
         ])
 
         with xai_tab1:
-            st.markdown("##### **SHAP (SHapley Additive exPlanations) Attribution**")
+            st.markdown(f"##### **SHAP Attribution for {in_name}**")
             st.caption("Shows how each physiological metric pushes the patient's risk higher (Red) or lower (Green) relative to the baseline population.")
             
             df_shap, base_val = active_xai.explain_patient_shap(patient_data.iloc[0])
             
-            # Plotly Waterfall / Horizontal Bar for SHAP
             shap_plot_df = df_shap.head(10).copy()
-            shap_plot_df["Color"] = np.where(shap_plot_df["SHAP Value"] > 0, "#ef4444", "#10b981")
-
             fig_shap = px.bar(
                 shap_plot_df,
                 x="SHAP Value",
@@ -331,7 +394,7 @@ with tab_diag:
                 orientation="h",
                 color="Impact",
                 color_discrete_map={"Increases Risk": "#ef4444", "Decreases Risk": "#10b981"},
-                title="Top 10 Clinical Features Influencing This Diagnosis",
+                title=f"Top Clinical Features Influencing Diagnosis for {in_name}",
                 hover_data=["Patient Value"]
             )
             fig_shap.update_layout(yaxis={'categoryorder': 'total ascending'}, height=400)
@@ -341,7 +404,7 @@ with tab_diag:
                 st.dataframe(df_shap[["Feature", "Clinical Label", "Patient Value", "SHAP Value", "Impact"]], use_container_width=True)
 
         with xai_tab2:
-            st.markdown("##### **LIME (Local Interpretable Model-agnostic Explanations)**")
+            st.markdown(f"##### **LIME Local Decision Rules for {in_name}**")
             st.caption("Surrogate local linear approximation identifying explicit clinical threshold rules driving this prediction.")
             
             lime_rules = active_xai.explain_patient_lime(patient_data.iloc[0], num_features=6)
@@ -355,22 +418,25 @@ with tab_diag:
                 orientation="h",
                 color="Direction",
                 color_discrete_map={"Increases Risk": "#ef4444", "Decreases Risk": "#10b981"},
-                title="LIME Decision Bounds & Feature Weights"
+                title=f"LIME Decision Bounds for {in_name}"
             )
             fig_lime.update_layout(yaxis={'categoryorder': 'total ascending'}, height=350)
             st.plotly_chart(fig_lime, use_container_width=True)
 
         with xai_tab3:
-            st.markdown("##### **Automated Physician Explanation Note**")
+            st.markdown(f"##### **Automated Physician Explanation Note for {in_name}**")
             top_risk_factors = df_shap[df_shap["SHAP Value"] > 0].head(3)
             top_protective_factors = df_shap[df_shap["SHAP Value"] < 0].head(3)
             
-            risk_bullets = "".join([f"- **{row['Clinical Label']}**: Recorded value of `{row['Patient Value']}` (SHAP: +{row['SHAP Value']:.3f})\n" for _, row in top_risk_factors.iterrows()])
-            prot_bullets = "".join([f"- **{row['Clinical Label']}**: Recorded value of `{row['Patient Value']}` (SHAP: {row['SHAP Value']:.3f})\n" for _, row in top_protective_factors.iterrows()])
+            risk_bullets = "".join([f"- **{row['Clinical Label']}**: Recorded value of `{row['Patient Value']}` (SHAP contribution: +{row['SHAP Value']:.3f})\n" for _, row in top_risk_factors.iterrows()])
+            prot_bullets = "".join([f"- **{row['Clinical Label']}**: Recorded value of `{row['Patient Value']}` (SHAP contribution: {row['SHAP Value']:.3f})\n" for _, row in top_protective_factors.iterrows()])
 
             st.markdown(f"""
             **Clinical Decision Explanation Summary:**
-            * The patient was assigned an estimated cardiovascular disease probability of **{prob_disease:.1%}** ({'HIGH RISK' if is_positive else 'LOW RISK'}).
+            * **Patient:** {in_name} (MRN: `{in_mrn}`)
+            * **Consultation:** Check-up #{in_checkups} | **Attending:** {in_doctor}
+            * **Clinical Presentation:** {in_complaint}
+            * **Assigned Cardiovascular Disease Probability:** **{prob_disease:.1%}** ({'HIGH RISK' if is_positive else 'LOW RISK'}).
             
             **Key Pathological Drivers (Elevating Risk):**
             {risk_bullets if risk_bullets else "- No significant risk factors elevated above baseline."}
@@ -378,7 +444,7 @@ with tab_diag:
             **Key Protective Factors (Mitigating Risk):**
             {prot_bullets if prot_bullets else "- No significant protective factors detected."}
 
-            *Note: This explanation is generated by model-agnostic Shapley attribution to provide transparency into black-box clinical classifications.*
+            *Note: This explanation is generated via model-agnostic Shapley attribution to provide transparency into black-box clinical classifications.*
             """)
 
 # ==========================================
@@ -539,3 +605,41 @@ with tab_fairness:
 # ==========================================
 # TAB 4: METHODOLOGY & DOCUMENTATION
 # ==========================================
+with tab_academic:
+    st.markdown("""
+    ### 📋 Academic Project Specifications & Technical Reference
+
+    - **Project ID:** 66
+    - **Student Registration / Roll No:** `24ME5A5402`
+    - **Batch / Room / Section:** `313`
+    - **Domain:** Explainable AI for Data-Driven Decisions
+    - **Project Title:** *Model-agnostic Interpretability for Black-box Classifiers via Fairness Auditing with Disparate-impact/equalized-odds Metrics, Applied to Clinical Decision Support Systems for Diagnosis Explanation*
+    - **Project Supervisor / Guide:** Mr. K. Rajendra
+
+    ---
+
+    ### 📐 Mathematical Formulation of Core Metrics
+
+    #### 1. Disparate Impact (Statistical Parity Ratio)
+    $$\\text{Disparate Impact} = \\frac{P(\\hat{Y} = 1 \\mid A = 0)}{P(\\hat{Y} = 1 \\mid A = 1)}$$
+    - **Benchmark (EEOC 80% Rule):** The ratio must fall within $[0.80, 1.25]$ to demonstrate that positive diagnostic interventions are not disproportionately withheld from the unprivileged group.
+
+    #### 2. Equalized Odds Metric
+    $$P(\\hat{Y} = 1 \\mid A = 0, Y = y) = P(\\hat{Y} = 1 \\mid A = 1, Y = y) \\quad \\text{for } y \\in \\{0, 1\\}$$
+    - Evaluates whether True Positive Rate (Sensitivity) and False Positive Rate (1 - Specificity) are strictly equal across protected cohorts:
+    $$\\text{Equalized Odds Difference} = \\max(|\\text{FPR}_0 - \\text{FPR}_1|, |\\text{TPR}_0 - \\text{TPR}_1|)$$
+
+    #### 3. Model-Agnostic Interpretability (SHAP & LIME)
+    - **SHAP (Shapley Additive exPlanations):** Computes Shapley values from cooperative game theory:
+    $$\\phi_i(x) = \\sum_{S \\subseteq F \\setminus \\{i\\}} \\frac{|S|!(|F| - |S| - 1)!}{|F|!} \\left[ f(S \\cup \\{i\\}) - f(S) \\right]$$
+    - **LIME (Local Interpretable Model-agnostic Explanations):** Trains an interpretable surrogate model $g \\in G$ locally around patient instance $x$:
+    $$\\xi(x) = \\arg\\min_{g \\in G} \\mathcal{L}(f, g, \\pi_x) + \\Omega(g)$$
+
+    ---
+
+    ### 🏥 Clinical Relevance in Decision Support Systems
+    In healthcare, black-box predictions alone are unacceptable due to:
+    1. **Liability and Trust:** Physicians must know *why* a patient is flagged (e.g. ST depression, age, cholesterol).
+    2. **Algorithmic Disparity:** Cardiovascular models frequently under-diagnose women due to atypical symptom presentation in training datasets.
+    3. **Actionability:** Auditing via Disparate Impact and Equalized Odds allows healthcare systems to adjust thresholds and ensure equitable diagnostic access.
+    """)
