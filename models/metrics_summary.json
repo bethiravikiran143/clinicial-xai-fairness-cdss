@@ -1,0 +1,29 @@
+{
+    "XGBoost": {
+        "Accuracy": 0.76,
+        "Balanced Accuracy": 0.6561,
+        "Sensitivity (Recall)": 0.4268,
+        "Specificity": 0.8853,
+        "Precision": 0.5833,
+        "F1 Score": 0.493,
+        "ROC-AUC": 0.7529
+    },
+    "Random Forest": {
+        "Accuracy": 0.7633,
+        "Balanced Accuracy": 0.5937,
+        "Sensitivity (Recall)": 0.2195,
+        "Specificity": 0.9679,
+        "Precision": 0.72,
+        "F1 Score": 0.3364,
+        "ROC-AUC": 0.7753
+    },
+    "Logistic Regression": {
+        "Accuracy": 0.7767,
+        "Balanced Accuracy": 0.6637,
+        "Sensitivity (Recall)": 0.4146,
+        "Specificity": 0.9128,
+        "Precision": 0.6415,
+        "F1 Score": 0.5037,
+        "ROC-AUC": 0.8156
+    }
+}
