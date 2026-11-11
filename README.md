@@ -7,8 +7,6 @@
 [![Fairlearn](https://img.shields.io/badge/Fairness-Fairlearn%20Auditing-orange)](https://fairlearn.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> **Academic Project Reference:** Project 66 | **Registration No:** `24ME5A5402`  
-> **Faculty Supervisor:** Mr. K. Rajendra  
 > **Repository:** [clinicial-xai-fairness-cdss](https://github.com/bethiravikiran143/clinicial-xai-fairness-cdss.git)
 
 ---
